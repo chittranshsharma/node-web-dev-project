@@ -3,15 +3,20 @@ import { Post } from "../models/post.model.js";
 
 function validatePost(body, isUpdate = false) {
   const fields = Object.keys(body);
-  if (fields.length === 0 || fields.some(field => !["name", "description", "age"].includes(field))) {
+  const allowedFields = ["name", "description", "age"];
+  if (fields.length === 0 || fields.some(field => !allowedFields.includes(field))) {
     return "Provide only name, description, and age; at least one field is required.";
   }
-  for (const field of ["name", "description"]) {
-    if ((!isUpdate || field in body) && (typeof body[field] !== "string" || !body[field].trim())) {
-      return `${field} must be a non-empty string.`;
-    }
+  if (!isUpdate && allowedFields.some(field => !(field in body))) {
+    return "Name, description, and age are required.";
   }
-  if ((!isUpdate || "age" in body) && (typeof body.age !== "number" || !Number.isFinite(body.age) || body.age < 1 || body.age > 150)) {
+  if ("name" in body && (typeof body.name !== "string" || !body.name.trim())) {
+    return "name must be a non-empty string.";
+  }
+  if ("description" in body && (typeof body.description !== "string" || !body.description.trim())) {
+    return "description must be a non-empty string.";
+  }
+  if ("age" in body && (typeof body.age !== "number" || !Number.isFinite(body.age) || body.age < 1 || body.age > 150)) {
     return "age must be a number between 1 and 150.";
   }
 }

@@ -15,7 +15,8 @@ function publicUser(user) {
 export async function registerUser(req, res, next) {
   try {
     const { username, email, password } = req.body;
-    if (typeof username !== "string" || !username.trim() || username.trim().length > 30 || !validEmail(email) || !validPassword(password)) {
+    const validUsername = typeof username === "string" && username.trim().length >= 1 && username.trim().length <= 30;
+    if (!validUsername || !validEmail(email) || !validPassword(password)) {
       return res.status(400).json({ message: "Provide a username (1–30 characters), valid email, and password (6–50 characters, at most 72 UTF-8 bytes)." });
     }
     const user = await User.create({ username, email, password });
