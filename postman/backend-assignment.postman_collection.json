@@ -1,0 +1,754 @@
+{
+  "info": {
+    "name": "Backend assignment — local API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Run requests in order. Login checks credentials only; logout does not invalidate a session. All post routes are public. Use disposable example data."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000"
+    },
+    {
+      "key": "username",
+      "value": ""
+    },
+    {
+      "key": "email",
+      "value": ""
+    },
+    {
+      "key": "password",
+      "value": "demoPassword123"
+    },
+    {
+      "key": "postId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Server check — 200",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/",
+        "description": "Expected HTTP 200."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('No password or hash in response', () => { const text = pm.response.text(); pm.expect(text).not.to.include('\"password\":'); pm.expect(text).not.to.include('$2b$'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Register a fresh user — 201",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/users/register",
+        "description": "Expected HTTP 201.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username}}\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const suffix = Date.now() + '-' + Math.floor(Math.random() * 100000);",
+              "pm.collectionVariables.set('username', 'demo' + suffix);",
+              "pm.collectionVariables.set('email', 'demo' + suffix + '@example.com');"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+              "pm.test('No password or hash in response', () => { const text = pm.response.text(); pm.expect(text).not.to.include('\"password\":'); pm.expect(text).not.to.include('$2b$'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Duplicate account — 409",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/users/register",
+        "description": "Expected HTTP 409.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username}}\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 409', () => pm.response.to.have.status(409));",
+              "pm.test('No password or hash in response', () => { const text = pm.response.text(); pm.expect(text).not.to.include('\"password\":'); pm.expect(text).not.to.include('$2b$'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Login — 200",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/users/login",
+        "description": "Expected HTTP 200.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('No password or hash in response', () => { const text = pm.response.text(); pm.expect(text).not.to.include('\"password\":'); pm.expect(text).not.to.include('$2b$'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Wrong password — 401",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/users/login",
+        "description": "Expected HTTP 401.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"incorrect123\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+              "pm.test('No password or hash in response', () => { const text = pm.response.text(); pm.expect(text).not.to.include('\"password\":'); pm.expect(text).not.to.include('$2b$'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Logout acknowledgement — 200",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/users/logout",
+        "description": "Expected HTTP 200.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('No password or hash in response', () => { const text = pm.response.text(); pm.expect(text).not.to.include('\"password\":'); pm.expect(text).not.to.include('$2b$'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create post after logout (routes are public) — 201",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/posts/create",
+        "description": "Expected HTTP 201.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Student\",\n  \"description\": \"Learning Express\",\n  \"age\": 20\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+              "pm.test('No password or hash in response', () => { const text = pm.response.text(); pm.expect(text).not.to.include('\"password\":'); pm.expect(text).not.to.include('$2b$'); });",
+              "pm.collectionVariables.set('postId', pm.response.json().post._id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Read posts — 200",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/posts/getPosts",
+        "description": "Expected HTTP 200."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('No password or hash in response', () => { const text = pm.response.text(); pm.expect(text).not.to.include('\"password\":'); pm.expect(text).not.to.include('$2b$'); });",
+              "pm.test('Created post exists', () => pm.expect(pm.response.json().some(post => post._id === pm.collectionVariables.get('postId'))).to.be.true);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Update post — 200",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/posts/update/{{postId}}",
+        "description": "Expected HTTP 200.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"description\": \"Updated from Postman\",\n  \"age\": 21\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('No password or hash in response', () => { const text = pm.response.text(); pm.expect(text).not.to.include('\"password\":'); pm.expect(text).not.to.include('$2b$'); });",
+              "pm.test('Updated age', () => pm.expect(pm.response.json().post.age).to.equal(21));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Read updated post (also run after restarting server) — 200",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/posts/getPosts",
+        "description": "Expected HTTP 200."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('No password or hash in response', () => { const text = pm.response.text(); pm.expect(text).not.to.include('\"password\":'); pm.expect(text).not.to.include('$2b$'); });",
+              "pm.test('Update persisted', () => { const post = pm.response.json().find(p => p._id === pm.collectionVariables.get('postId')); pm.expect(post.description).to.equal('Updated from Postman'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Invalid age — 400",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/posts/update/{{postId}}",
+        "description": "Expected HTTP 400.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"age\": 151\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+              "pm.test('No password or hash in response', () => { const text = pm.response.text(); pm.expect(text).not.to.include('\"password\":'); pm.expect(text).not.to.include('$2b$'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Empty update — 400",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/posts/update/{{postId}}",
+        "description": "Expected HTTP 400.",
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+              "pm.test('No password or hash in response', () => { const text = pm.response.text(); pm.expect(text).not.to.include('\"password\":'); pm.expect(text).not.to.include('$2b$'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject update operators — 400",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/posts/update/{{postId}}",
+        "description": "Expected HTTP 400.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"$set\": {\n    \"age\": 30\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+              "pm.test('No password or hash in response', () => { const text = pm.response.text(); pm.expect(text).not.to.include('\"password\":'); pm.expect(text).not.to.include('$2b$'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Invalid ID — 400",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/posts/delete/not-an-id",
+        "description": "Expected HTTP 400."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+              "pm.test('No password or hash in response', () => { const text = pm.response.text(); pm.expect(text).not.to.include('\"password\":'); pm.expect(text).not.to.include('$2b$'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Missing registration fields — 400",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/users/register",
+        "description": "Expected HTTP 400.",
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+              "pm.test('No password or hash in response', () => { const text = pm.response.text(); pm.expect(text).not.to.include('\"password\":'); pm.expect(text).not.to.include('$2b$'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Invalid login email type — 400",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/users/login",
+        "description": "Expected HTTP 400.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": {\n    \"$ne\": null\n  },\n  \"password\": \"demoPassword123\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+              "pm.test('No password or hash in response', () => { const text = pm.response.text(); pm.expect(text).not.to.include('\"password\":'); pm.expect(text).not.to.include('$2b$'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Missing logout user — 404",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/users/logout",
+        "description": "Expected HTTP 404.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"missing-{{$guid}}@example.com\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+              "pm.test('No password or hash in response', () => { const text = pm.response.text(); pm.expect(text).not.to.include('\"password\":'); pm.expect(text).not.to.include('$2b$'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Age must be numeric — 400",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/posts/create",
+        "description": "Expected HTTP 400.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"A\",\n  \"description\": \"B\",\n  \"age\": \"20\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+              "pm.test('No password or hash in response', () => { const text = pm.response.text(); pm.expect(text).not.to.include('\"password\":'); pm.expect(text).not.to.include('$2b$'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Malformed JSON — 400",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/posts/create",
+        "description": "Expected HTTP 400.",
+        "body": {
+          "mode": "raw",
+          "raw": "{",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+              "pm.test('No password or hash in response', () => { const text = pm.response.text(); pm.expect(text).not.to.include('\"password\":'); pm.expect(text).not.to.include('$2b$'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Delete post — 200",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/posts/delete/{{postId}}",
+        "description": "Expected HTTP 200."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('No password or hash in response', () => { const text = pm.response.text(); pm.expect(text).not.to.include('\"password\":'); pm.expect(text).not.to.include('$2b$'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Delete missing post — 404",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/posts/delete/{{postId}}",
+        "description": "Expected HTTP 404."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+              "pm.test('No password or hash in response', () => { const text = pm.response.text(); pm.expect(text).not.to.include('\"password\":'); pm.expect(text).not.to.include('$2b$'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Update missing post — 404",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/posts/update/{{postId}}",
+        "description": "Expected HTTP 404.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"age\": 22\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+              "pm.test('No password or hash in response', () => { const text = pm.response.text(); pm.expect(text).not.to.include('\"password\":'); pm.expect(text).not.to.include('$2b$'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Confirm deletion — 200",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/posts/getPosts",
+        "description": "Expected HTTP 200."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('No password or hash in response', () => { const text = pm.response.text(); pm.expect(text).not.to.include('\"password\":'); pm.expect(text).not.to.include('$2b$'); });",
+              "pm.test('Post no longer exists', () => pm.expect(pm.response.json().some(post => post._id === pm.collectionVariables.get('postId'))).to.be.false);"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
