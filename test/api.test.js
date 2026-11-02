@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { once } from "node:events";
 import { spawn } from "node:child_process";
 import { createServer } from "node:net";
-import { MongoMemoryServer } from "mongodb-memory-server";
+import { MongoMemoryServer } from "mongodb-memory-server-core";
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import app from "../backend/src/app.js";
